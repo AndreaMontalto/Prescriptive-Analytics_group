@@ -1512,19 +1512,25 @@ model$obj<-rep(c(
 model$modelsense<-"min"
 model$rhs<-c(
   #demand
-  demand[1,1],demand[1,2],demand[1,3],demand[1,4],
-  demand[2,1],demand[2,2],demand[2,3],demand[2,4],
-  demand[3,1],demand[3,2],demand[3,3],demand[3,4],
-  demand[4,1],demand[4,2],demand[4,3],demand[4,4],
-  demand[5,1],demand[5,2],demand[5,3],demand[5,4],
-  demand[6,1],demand[6,2],demand[6,3],demand[6,4],
-  demand[7,1],demand[7,2],demand[7,3],demand[7,4],
+  demand[1,1]/2,demand[1,2]/2,demand[1,3]/2,demand[1,4]/2,
+  demand[2,1]/2,demand[2,2]/2,demand[2,3]/2,demand[2,4]/2,
+  demand[3,1]/2,demand[3,2]/2,demand[3,3]/2,demand[3,4]/2,
+  demand[4,1]/2,demand[4,2]/2,demand[4,3]/2,demand[4,4]/2,
+  demand[5,1]/2,demand[5,2]/2,demand[5,3]/2,demand[5,4]/2,
+  demand[6,1]/2,demand[6,2]/2,demand[6,3]/2,demand[6,4]/2,
+  demand[7,1]/2,demand[7,2]/2,demand[7,3]/2,demand[7,4]/2,
   #nurses lower
   rep(0,28),
   #nurses upper
   rep(0,28),
   #surgeon
-  rep(5,28),
+  3,5,5,5,
+  3,5,5,5,
+  3,5,5,5,
+  3,5,5,5,
+  3,5,5,5,
+  3,5,5,5,
+  3,5,5,5,
   #general practitioners
   demand[1,1]/15,demand[1,2]/15,demand[1,3]/15,demand[1,4]/15,
   demand[2,1]/15,demand[2,2]/15,demand[2,3]/15,demand[2,4]/15,
@@ -1551,8 +1557,6 @@ print(result$x)
 
 ### GREEDY ALGORITHM ###
 
-
-greedy algorithm 
 Min_x2_night <- 3
 Min_x2_day <- 5
 gp_patients <- 15
@@ -1600,4 +1604,5 @@ greedy <- function(p, Svec, Tvec, n){
 }
 
 
-result <- greedy(Pmat, Svec, Tvec, demand)
+result_greedy <- greedy(Pmat, Svec, Tvec, demand)
+
