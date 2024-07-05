@@ -1606,3 +1606,6 @@ greedy <- function(p, Svec, Tvec, n){
 
 result_greedy <- greedy(Pmat, Svec, Tvec, demand)
 
+### DYNAMIC PROGRAMMING ###
+
+
