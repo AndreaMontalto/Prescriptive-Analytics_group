@@ -3309,12 +3309,17 @@ result_greedy_sim[[k]] <- greedy(Pmat, Svec, Tvec, demand)
 
 #### Dynamic Simulation ####
 costs <- c(ceiling(rnorm(1, 289, 102)), ceiling(rnorm(1, 1016, 270)),ceiling(rnorm(1, 1240, 300)))
+num_doctors <- length(costs)
 random_t <- ceiling(runif(1, 1, 7))
 random_s <- ceiling(runif(1, 1, 4))
 demand_sim <- as.numeric(demand[random_t, random_s])
+min_x2 <- 5
+min_x3 <- ceiling(demand_sim/15)
+min_x <- ceiling(demand_sim/2)
 nrow <- 6*demand_sim + 1
 ncol <- 3*demand_sim - min_x + 1
 
+{
 solveDP_sim <- function() {
   dp <- matrix(demand_sim*sum(costs), nrow = nrow, ncol = ncol)
   for (t in num_doctors:1) {
@@ -3393,5 +3398,5 @@ for (t in 1:length(costs)) {
   }
 }
 print(selected_doctor_dp)
-
+}
 
