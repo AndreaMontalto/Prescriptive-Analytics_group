@@ -1744,7 +1744,7 @@ print(selected_doctor)
 }
 
 #### MONTECARLO SIMULATION ####
-n_simulations <- 3
+n_simulations <- 10
 
 result_greedy_sim <- list()
 
