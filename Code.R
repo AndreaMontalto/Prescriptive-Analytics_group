@@ -1623,11 +1623,11 @@ result_greedy <- greedy(Pmat, Svec, Tvec, demand)
 ### DYNAMIC PROGRAMMING ###
 
 { costs <- c(289,1016, 1240)
-  demand <- 50
+  demand_dp <- 50
   num_doctors <- length(costs)
   min_x2 <- 5
-  min_x3 <- ceiling(demand/15)
-  min_x <- ceiling(demand/2)
+  min_x3 <- ceiling(demand_dp/15)
+  min_x <- ceiling(demand_dp/2)
   
   # Constraints
   # 3*(gps+surgeons) - nurses >= 0
@@ -1657,29 +1657,29 @@ result_greedy <- greedy(Pmat, Svec, Tvec, demand)
   # Theses values determine the number of rows and columns of our matrix since each row
   # corresponds to a value of the first constraint (from 0 to 6*demand) and each column
   # corresponds to a value of the second constraint (from 0 to 3*demand-min_x)
-  nrow <- 6*demand + 1
-  ncol <- 3*demand - min_x + 1
+  nrow <- 6*demand_dp + 1
+  ncol <- 3*demand_dp - min_x + 1
   
 }
 {
 solveDP <- function() {
-  dp <- matrix(demand*sum(costs), nrow = nrow, ncol = ncol)
+  dp <- matrix(demand_dp*sum(costs), nrow = nrow, ncol = ncol)
   for (t in num_doctors:1) {
     dp2 <- dp
     for (row in 1:nrow) {
       for (col in 1:ncol){
         # n is the number of doctors we remove
-        for (n in 1:demand) {
+        for (n in 1:demand_dp) {
           if (t==1 & row > n & col+n <= ncol){
             # We potentially remove n nurses
             dp2[row,col] <- min(dp[row,col], dp[row-n,col+n] - n*costs[t])
           }
-          else if (t==2 & n <= (demand - min_x2) & row + (3*n) <= nrow & col+n <= ncol){
+          else if (t==2 & n <= (demand_dp - min_x2) & row + (3*n) <= nrow & col+n <= ncol){
             # We potentially remove n doctors
             # We ensure the constraint demand - n >= min_x2
             dp2[row,col] <- min(dp[row,col], dp[row+(3*n),col+n] - n*costs[t])
           }
-          else if (t==3 & n <= (demand - min_x3) & row + (3*n) <= nrow & col+n <= ncol) {
+          else if (t==3 & n <= (demand_dp - min_x3) & row + (3*n) <= nrow & col+n <= ncol) {
             # We potentially remove n surgeons
             # We ensure the constraint demand - n >= min_x3
             dp2[row,col] <- min(dp[row,col], dp[row+3*n,col+n] - n*costs[t])
@@ -1708,28 +1708,28 @@ for(i in 1:nrow) {
 # Optimal value
 print(dp[row,col])
 
-selected_doctor <- c(demand,demand,demand)
+selected_doctor <- c(demand_dp,demand_dp,demand_dp)
 for (t in 1:length(costs)) {
-  for (n in demand:1) {
+  for (n in demand_dp:1) {
     if (t==1 & row>n & col+n<=ncol){
       if (dp[row,col] == dp[row-n,col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand - n
+        selected_doctor[t] <- demand_dp - n
         row <- row-n
         col <- col+n
         break
       }
     }
-    else if (t==2 & n <= (demand - min_x2) & row + (3*n) <= nrow & col+n <= ncol){
+    else if (t==2 & n <= (demand_dp - min_x2) & row + (3*n) <= nrow & col+n <= ncol){
       if (dp[row,col] ==  dp[row+(3*n),col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand-n
+        selected_doctor[t] <- demand_dp-n
         row <- row+3*n
         col <- col+n
         break
       }
     }
-    else if (t==3 & n <= (demand - min_x3) & row + (3*n) <= nrow & col+n <= ncol) {
+    else if (t==3 & n <= (demand_dp - min_x3) & row + (3*n) <= nrow & col+n <= ncol) {
       if (dp[row,col] ==  dp[row+(3*n),col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand-n
+        selected_doctor[t] <- demand_dp-n
         row <- row+3*n
         col <- col+n
         break
@@ -3349,26 +3349,26 @@ dp_simulated <- solveDP_sim()
 
 row <- 1
 col <- 1
-best <- dp_simulated[1,1]
+best_sim <- dp_simulated[1,1]
 
 for(i in 1:nrow) {
   for(j in 1:ncol) {
-    if(dp_simulated[i,j] < best) {
+    if(dp_simulated[i,j] < best_sim) {
       row <- i
       col <- j
-      best <- dp_simulated[i,j]
+      best_sim <- dp_simulated[i,j]
     }
   }
 }
 # Optimal value
 print(dp_simulated[row,col])
 
-selected_doctor <- c(demand_sim,demand_sim,demand_sim)
+selected_doctor_dp <- c(demand_sim,demand_sim,demand_sim)
 for (t in 1:length(costs)) {
   for (n in demand_sim:1) {
     if (t==1 & row>n & col+n <= ncol){
       if (dp_simulated[row,col] == dp_simulated[row-n,col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand_sim - n
+        selected_doctor_dp[t] <- demand_sim - n
         row <- row-n
         col <- col+n
         break
@@ -3376,7 +3376,7 @@ for (t in 1:length(costs)) {
     }
     else if (t==2 & n <= (demand_sim - min_x2) & row + (3*n) <= nrow & col+n <= ncol){
       if (dp_simulated[row,col] ==  dp_simulated[row+(3*n),col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand_sim-n
+        selected_doctor_dp[t] <- demand_sim-n
         row <- row+3*n
         col <- col+n
         break
@@ -3384,7 +3384,7 @@ for (t in 1:length(costs)) {
     }
     else if (t==3 & n <= (demand_sim - min_x3) & row + (3*n) <= nrow & col+n <= ncol) {
       if (dp_simulated[row,col] ==  dp_simulated[row+(3*n),col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand_sim-n
+        selected_doctor_dp[t] <- demand_sim-n
         row <- row+3*n
         col <- col+n
         break
@@ -3392,6 +3392,6 @@ for (t in 1:length(costs)) {
     }
   }
 }
-print(selected_doctor)
+print(selected_doctor_dp)
 
 
