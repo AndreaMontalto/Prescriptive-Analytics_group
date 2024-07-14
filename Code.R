@@ -27,10 +27,10 @@ Ivec <- list(i1 = (0:4),
 Dvec <- 1:3
 
 #Cost matrix -- each type of doctor per shift 
-Pmat<-matrix(c(561,2179, 1083,
-               374,1453,722,
-               374,1453,722,
-               374,1453,722), nrow=length(Dvec), ncol = length(Svec))
+Pmat<-matrix(c(434,1860, 1524,
+               289,1240,1016,
+               289,1240,1016,
+               289,1240,1016), nrow=length(Dvec), ncol = length(Svec))
 
 #demand per each period i in a day T
 Nmat<-matrix(0, nrow = length(Tvec), ncol = length(Ivec))
@@ -1083,7 +1083,7 @@ nurses_T7_s4_rhs_L<-c(0,0,0,0,0,0,0,0,0,0,0,0,
 }
 #day 4 over all shifts
 {
-  surgeon_T4_s1<-c(0,0,0,0,10,0,0,0,0,0,0,0,
+  surgeon_T4_s1<-c(0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,1,0,0,0,0,0,0,0,
@@ -1114,7 +1114,7 @@ nurses_T7_s4_rhs_L<-c(0,0,0,0,0,0,0,0,0,0,0,0,
 }
 #day 5 over all shifts
 {
-  surgeon_T5_s1<-c(0,0,0,0,10,0,0,0,0,0,0,0,
+  surgeon_T5_s1<-c(0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0,0,0,0,0,0,
@@ -1145,7 +1145,7 @@ nurses_T7_s4_rhs_L<-c(0,0,0,0,0,0,0,0,0,0,0,0,
 }
 #day 6 over all shifts
 {
-  surgeon_T6_s1<-c(0,0,0,0,10,0,0,0,0,0,0,0,
+  surgeon_T6_s1<-c(0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0,0,0,0,0,0,
                    0,0,0,0,0,0,0,0,0,0,0,0,
@@ -1622,8 +1622,8 @@ result_greedy <- greedy(Pmat, Svec, Tvec, demand)
 }
 ### DYNAMIC PROGRAMMING ###
 
-{ costs <- c(374,722,1453)
-  demand <- 30
+{ costs <- c(289,1016, 1240)
+  demand <- 50
   num_doctors <- length(costs)
   min_x2 <- 5
   min_x3 <- ceiling(demand/15)
@@ -1756,7 +1756,7 @@ for (k in 1:n_simulations){
               s4 = (16:24))
   #type of doctor
   Dvec <- 1:3
-  means <- c(374, 1453, 722) #mean wage per doctor type
+  means <- c(289,1240,1016) #mean wage per doctor type
   stds <- c(102, 300, 270) #std wages
 
   Pmat <- matrix(0, nrow = length(Dvec), ncol = length(Svec))
@@ -1808,10 +1808,7 @@ for (k in 1:n_simulations){
         Amat[s, i] <- 0}
     }
   }
-  #### GUROBI MODEL ####
-  #creating the daily demand constraint, first creating the left hand side and then the corresponding right hand side
-  #constraint day 1 over all shifts
-    
+#### GUROBI MODEL ####
   {
     {
         t1_s1<-c(1,0,0,0,1,0,0,0,1,0,0,0,
@@ -3311,9 +3308,44 @@ result_greedy_sim[[k]] <- greedy(Pmat, Svec, Tvec, demand)
 }
 
 #### Dynamic Simulation ####
-costs <- c(rnorm(1, 374, 102),rnorm(1, 722, 270),rnorm(1, 1453, 300))
-demand <- rnorm(1, 261, 45)
-dp_simulated <- solveDP()
+costs <- c(ceiling(rnorm(1, 289, 102)), ceiling(rnorm(1, 1016, 270)),ceiling(rnorm(1, 1240, 300)))
+random_t <- ceiling(runif(1, 1, 7))
+random_s <- ceiling(runif(1, 1, 4))
+demand_sim <- as.numeric(demand[random_t, random_s])
+nrow <- 6*demand_sim + 1
+ncol <- 3*demand_sim - min_x + 1
+
+solveDP_sim <- function() {
+  dp <- matrix(demand_sim*sum(costs), nrow = nrow, ncol = ncol)
+  for (t in num_doctors:1) {
+    dp2 <- dp
+    for (row in 1:nrow) {
+      for (col in 1:ncol){
+        # n is the number of doctors we remove
+        for (n in 1:demand_sim) {
+          if (t==1 & row > n & col+n <= ncol){
+            # We potentially remove n nurses
+            dp2[row,col] <- min(dp[row,col], dp[row-n,col+n] - n*costs[t])
+          }
+          else if (t==2 & n <= (demand_sim - min_x2) & row + (3*n) <= nrow & col+n <= ncol){
+            # We potentially remove n doctors
+            # We ensure the constraint demand - n >= min_x2
+            dp2[row,col] <- min(dp[row,col], dp[row+(3*n),col+n] - n*costs[t])
+          }
+          else if (t==3 & n <= (demand_sim - min_x3) & row + (3*n) <= nrow & col+n <= ncol) {
+            # We potentially remove n surgeons
+            # We ensure the constraint demand - n >= min_x3
+            dp2[row,col] <- min(dp[row,col], dp[row+3*n,col+n] - n*costs[t])
+          }
+        }
+      }
+    }
+    dp <- dp2
+  }
+  return(dp)
+}
+
+dp_simulated <- solveDP_sim()
 
 row <- 1
 col <- 1
@@ -3331,28 +3363,28 @@ for(i in 1:nrow) {
 # Optimal value
 print(dp_simulated[row,col])
 
-selected_doctor <- c(demand,demand,demand)
+selected_doctor <- c(demand_sim,demand_sim,demand_sim)
 for (t in 1:length(costs)) {
-  for (n in demand:1) {
-    if (t==1 & row>n & col+n<=ncol){
+  for (n in demand_sim:1) {
+    if (t==1 & row>n & col+n <= ncol){
       if (dp_simulated[row,col] == dp_simulated[row-n,col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand - n
+        selected_doctor[t] <- demand_sim - n
         row <- row-n
         col <- col+n
         break
       }
     }
-    else if (t==2 & n <= (demand - min_x2) & row + (3*n) <= nrow & col+n <= ncol){
+    else if (t==2 & n <= (demand_sim - min_x2) & row + (3*n) <= nrow & col+n <= ncol){
       if (dp_simulated[row,col] ==  dp_simulated[row+(3*n),col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand-n
+        selected_doctor[t] <- demand_sim-n
         row <- row+3*n
         col <- col+n
         break
       }
     }
-    else if (t==3 & n <= (demand - min_x3) & row + (3*n) <= nrow & col+n <= ncol) {
+    else if (t==3 & n <= (demand_sim - min_x3) & row + (3*n) <= nrow & col+n <= ncol) {
       if (dp_simulated[row,col] ==  dp_simulated[row+(3*n),col+n] - n*costs[t]) {
-        selected_doctor[t] <- demand-n
+        selected_doctor[t] <- demand_sim-n
         row <- row+3*n
         col <- col+n
         break
